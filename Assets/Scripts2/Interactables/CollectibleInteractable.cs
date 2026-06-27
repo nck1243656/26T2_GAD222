@@ -1,12 +1,38 @@
+using System;
+using System.Xml;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class CollectibleInteractable : MonoBehaviour, IInteractable
 {
-    [SerializeField] private PlayerStatus playerStatus;
-    [SerializeField] private int collectType;
+    private PlayerStatus playerStatus;
+    private GameStage gameStage;
+
+    [Header("Size (1–4). 1 = largest, 4 = smallest.")]
+    [SerializeField] private int collectSize; // 1-4, 1 being largest
+
+    [SerializeField] private string id;
+
+    void Awake()
+    {
+        playerStatus = GameObject.Find("GameManager").GetComponent<PlayerStatus>();
+        gameStage = GameObject.Find("GameManager").GetComponent<GameStage>();
+
+        ApplyID();
+    }
+    void ApplyID()
+    {
+        transform.parent.name = $"Collectible_{id}";
+    }
 
     public void Interact()
     {
-        playerStatus.StoreCollectible(transform.parent.gameObject);
+        if (collectSize <= gameStage.currentGameStage)
+        {
+            playerStatus.StoreCollectible(transform.parent.gameObject);
+            return;
+        }
+
+        Debug.Log("Cant Pickup");
     }
 }

@@ -5,10 +5,12 @@ public class InteractionIndicator : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] Transform mainCam;
-    [SerializeField] Keybinds keybinds;
+    Keybinds keybinds;
+    [SerializeField] bool staticCameraActive = false;
 
     private void Awake()
     {
+        keybinds = GameObject.Find("GameManager").GetComponent<Keybinds>();
         TextMeshPro textMesh = GetComponent<TextMeshPro>();
         textMesh.text = $"{keybinds.interactKey}";
     }
@@ -16,6 +18,9 @@ public class InteractionIndicator : MonoBehaviour
     private void LateUpdate()
     {
         transform.LookAt(mainCam);
-        transform.RotateAround(transform.position, transform.up, 180f);
+        if (!staticCameraActive)
+        {
+            transform.RotateAround(transform.position, transform.up, 180f);
+        }
     }
 }

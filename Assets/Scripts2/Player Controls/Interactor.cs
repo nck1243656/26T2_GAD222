@@ -16,10 +16,15 @@ public class Interactor : MonoBehaviour
     [Header("References")]
     public LayerMask interactLayer;
     public LayerMask collectLayer;
-    [SerializeField] Keybinds keybinds;
+    Keybinds keybinds;
     [SerializeField] GameObject interactionIndicator;
 
     public bool canInteract = true;
+
+    private void Awake()
+    {
+        keybinds = GameObject.Find("GameManager").GetComponent<Keybinds>();
+    }
 
     void Update()
     {

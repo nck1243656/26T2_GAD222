@@ -51,7 +51,7 @@ public class PlayerController : MonoBehaviour
 
     Rigidbody body;
 
-    [SerializeField] Keybinds keybinds;
+    Keybinds keybinds;
 
     Vector3 velocity, desiredVelocity;
 
@@ -80,6 +80,7 @@ public class PlayerController : MonoBehaviour
     void Awake()
     {
         body = GetComponent<Rigidbody>();
+        keybinds = GameObject.Find("GameManager").GetComponent<Keybinds>();
         OnValidate();
     }
 

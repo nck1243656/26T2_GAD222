@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class PlayerStatus : MonoBehaviour
 {
-    public static PlayerStatus Instance;
+    public static PlayerStatus Instance { get; private set; }
 
     [Header("Health")]
     public int playerHealth = 6;
@@ -14,35 +14,30 @@ public class PlayerStatus : MonoBehaviour
     public int maxStorage = 4;
 
     [Header("Stored Collectibles")]
-    [SerializeField] private List<GameObject> storedCollectibles = new List<GameObject>();
+    [SerializeField] private List<string> storedCollectibles = new List<string>();
+
+    [SerializeField] private List<string> deadCollectibles = new List<string>();
+
+    public bool gameStarted = false;
 
     private void Awake()
     {
-        if (Instance != null)
+        if (Instance != null && Instance != this)
         {
-            Destroy(gameObject);
-            return;
+            Destroy(this);
+        }
+        else
+        {
+            Instance = this;
         }
 
-        Instance = this;
-
-        DontDestroyOnLoad(gameObject);
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
     }
 
-    void Update()
+    private void Start()
     {
-        if (Input.GetKeyDown(KeyCode.O))
-        {
-            RestoreStorage();
-        }
-        if (Input.GetKeyDown(KeyCode.P))
-        {
-            ClearStorage();
-        }
-        if (Input.GetKeyDown(KeyCode.I))
-        {
-            TakeDamage();
-        }
+        gameStarted = true;
     }
 
     public void TakeDamage()
@@ -57,15 +52,25 @@ public class PlayerStatus : MonoBehaviour
         }
     }
 
+    public void StatusReset()
+    {
+        playerHealth = playerMaxHealth;
+        ClearStorage();
+    }
+
     public void StoreCollectible(GameObject obj)
     {
         if (playerStorage < maxStorage)
         {
             Debug.Log("Collected");
 
-            storedCollectibles.Add(obj);
+            string id = obj.name;
+
+            Debug.Log($"Stored: {id}");
+            storedCollectibles.Add(id);
             playerStorage++;
-            obj.SetActive(false);
+
+            ChildrenActiveStatus(obj, false);
 
             return;
         }
@@ -75,9 +80,15 @@ public class PlayerStatus : MonoBehaviour
 
     void ClearStorage()
     {
-        foreach (GameObject obj in storedCollectibles)
+        foreach (string id in storedCollectibles)
         {
-            Destroy(obj);
+            deadCollectibles.Add(id);
+
+            GameObject obj = GameObject.Find(id);
+            if (obj != null)
+            {
+                Destroy(obj);
+            }
         }
         storedCollectibles.Clear();
         playerStorage = 0;
@@ -85,11 +96,34 @@ public class PlayerStatus : MonoBehaviour
 
     void RestoreStorage()
     {
-        foreach (GameObject obj in storedCollectibles)
+        foreach (string id in storedCollectibles)
         {
-            obj.SetActive(true);
+            GameObject obj = GameObject.Find(id);
+            ChildrenActiveStatus(obj, true);
         }
         storedCollectibles.Clear();
         playerStorage = 0;
+    }
+
+    public void DestroyCollectiblesOnLoad()
+    {
+        foreach (string id in deadCollectibles)
+        {
+            GameObject obj = GameObject.Find(id);
+            Destroy(obj);
+        }
+        foreach (string id in storedCollectibles)
+        {
+            GameObject obj = GameObject.Find(id);
+            ChildrenActiveStatus(obj, false);
+        }
+    }
+
+    void ChildrenActiveStatus(GameObject obj, bool state)
+    {
+        foreach (Transform child in obj.transform)
+        {
+            child.gameObject.SetActive(state);
+        }
     }
 }

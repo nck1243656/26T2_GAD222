@@ -24,10 +24,6 @@ public class OrbitCamera : MonoBehaviour
 
     [Header("Angle")]
 
-    //How fast camera rotates, e.i sensitivy so this will eventually be a controlled elsewhere
-    [SerializeField, Range(1f, 600f)]
-    float rotationSpeed = 90f;
-
     //Vertical clamps
     [SerializeField, Range(-89f, 89f)]
     float minVerticalAngle = -30f, maxVerticalAngle = 60f;
@@ -38,8 +34,9 @@ public class OrbitCamera : MonoBehaviour
     [SerializeField]
     LayerMask obstructionMask = -1;
 
-    // References
+    [Header("References")]
     Camera regularCamera;
+    Keybinds keybinds;
 
     // Other stuff \/
 
@@ -71,8 +68,7 @@ public class OrbitCamera : MonoBehaviour
 
     void Awake()
     {
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+        keybinds = GameObject.Find("GameManager").GetComponent<Keybinds>();
 
         regularCamera = GetComponent<Camera>();
         focusPoint = focus.position;
@@ -141,14 +137,17 @@ public class OrbitCamera : MonoBehaviour
 
     bool ManualRotation()
     {
-        Vector2 input = new Vector2(
-            Input.GetAxis("Mouse Y"),
-            Input.GetAxis("Mouse X")
-        );
+        float y = Input.GetAxis("Mouse Y");
+        if (keybinds.mouseYInvert)
+        {
+            y = -y;
+        }
+        Vector2 input = new Vector2(y, Input.GetAxis("Mouse X"));
+
         const float e = 0.001f;
         if (input.x < -e || input.x > e || input.y < -e || input.y > e)
         {
-            orbitAngles += rotationSpeed * Time.unscaledDeltaTime * input;
+            orbitAngles += keybinds.cameraSenstivity * Time.unscaledDeltaTime * input;
             lastManualRotationTime = Time.unscaledTime;
             return true;
         }

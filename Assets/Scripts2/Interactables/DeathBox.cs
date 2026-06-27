@@ -3,18 +3,21 @@ using UnityEngine;
 public class Deathbox : MonoBehaviour
 {
     [Header("References")]
+    private PlayerStatus playerStatus;
     [SerializeField] private Transform resetPoint;
-    [SerializeField] private PlayerStats playerStats;
+
+    void Awake()
+    {
+        playerStatus = GameObject.Find("GameManager").GetComponent<PlayerStatus>();
+    }
 
     private void OnTriggerEnter(Collider other)
     {
         if (!other.CompareTag("Player")) return;
 
-        Debug.Log("Player Fell");
+        Debug.Log("Player took damage");
 
-        playerStats.TakeDamage(1);
-
-        CharacterController controller = other.GetComponent<CharacterController>();
+        playerStatus.TakeDamage();
 
         other.transform.position = resetPoint.position;
     }
