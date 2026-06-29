@@ -29,7 +29,13 @@ public class CollectibleInteractable : MonoBehaviour, IInteractable
     {
         if (collectSize <= gameStage.currentGameStage)
         {
+            if (collectSize == gameStage.currentGameStage)
+            {
+                playerStatus.CountCollectible();
+            }
+
             playerStatus.StoreCollectible(transform.parent.gameObject);
+
             return;
         }
 

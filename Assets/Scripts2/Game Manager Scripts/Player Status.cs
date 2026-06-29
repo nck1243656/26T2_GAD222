@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -8,17 +9,19 @@ public class PlayerStatus : MonoBehaviour
     [Header("Health")]
     public int playerHealth = 6;
     public int playerMaxHealth = 6;
+    public event Action<int> PlayerHealthChanged;
 
     [Header("Storage")]
     public int playerStorage = 0;
     public int maxStorage = 4;
 
+    public int amountCollected = 0;
+    public event Action<int> OnAmountCollectedChanged;
+
     [Header("Stored Collectibles")]
     [SerializeField] private List<string> storedCollectibles = new List<string>();
 
     [SerializeField] private List<string> deadCollectibles = new List<string>();
-
-    public bool gameStarted = false;
 
     private void Awake()
     {
@@ -35,11 +38,6 @@ public class PlayerStatus : MonoBehaviour
         Cursor.visible = false;
     }
 
-    private void Start()
-    {
-        gameStarted = true;
-    }
-
     public void TakeDamage()
     {
         playerHealth--;
@@ -50,12 +48,15 @@ public class PlayerStatus : MonoBehaviour
             RestoreStorage();
             playerHealth = playerMaxHealth;
         }
+
+        PlayerHealthChanged?.Invoke(playerHealth);
     }
 
     public void StatusReset()
     {
         playerHealth = playerMaxHealth;
         ClearStorage();
+        PlayerHealthChanged?.Invoke(playerHealth);
     }
 
     public void StoreCollectible(GameObject obj)
@@ -84,6 +85,9 @@ public class PlayerStatus : MonoBehaviour
         {
             deadCollectibles.Add(id);
 
+            amountCollected--;
+            OnAmountCollectedChanged?.Invoke(amountCollected);
+
             GameObject obj = GameObject.Find(id);
             if (obj != null)
             {
@@ -98,11 +102,15 @@ public class PlayerStatus : MonoBehaviour
     {
         foreach (string id in storedCollectibles)
         {
+            amountCollected--;
+
             GameObject obj = GameObject.Find(id);
             ChildrenActiveStatus(obj, true);
         }
         storedCollectibles.Clear();
         playerStorage = 0;
+
+        OnAmountCollectedChanged?.Invoke(amountCollected);
     }
 
     public void DestroyCollectiblesOnLoad()
@@ -125,5 +133,11 @@ public class PlayerStatus : MonoBehaviour
         {
             child.gameObject.SetActive(state);
         }
+    }
+
+    public void CountCollectible()
+    {
+        amountCollected++;
+        OnAmountCollectedChanged?.Invoke(amountCollected);
     }
 }

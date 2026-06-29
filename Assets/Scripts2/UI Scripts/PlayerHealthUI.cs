@@ -13,16 +13,12 @@ public class PlayerHealthUI : MonoBehaviour
     {
         img = GetComponent<Image>();
         playerStatus = GameObject.Find("GameManager").GetComponent<PlayerStatus>();
+        playerStatus.PlayerHealthChanged += UpdateHealthUI;
     }
 
-    private void FixedUpdate()
+    void UpdateHealthUI(int currentPlayerHealth)
     {
-        UpdateHealthUI();
-    }
-
-    void UpdateHealthUI()
-    {
-        img.sprite = sprites[playerStatus.playerHealth];
+        img.sprite = sprites[currentPlayerHealth];
     }
 
 }

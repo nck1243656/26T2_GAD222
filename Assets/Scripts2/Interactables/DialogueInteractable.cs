@@ -6,10 +6,15 @@ using UnityEngine;
 public class DialogueInteractable : MonoBehaviour, IInteractable
 {
     [Header("Dialogue")]
-    [TextArea(2, 5)]
-    [SerializeField] private List<string> dialogueLines = new List<string>();
+    [SerializeField, TextArea(2, 5)] private List<string> dialogueStage0 = new List<string>();
+    [SerializeField, TextArea(2, 5)] private List<string> dialogueStage1 = new List<string>();
+    [SerializeField, TextArea(2, 5)] private List<string> dialogueStage2 = new List<string>();
+    [SerializeField, TextArea(2, 5)] private List<string> dialogueStage3 = new List<string>();
+    [SerializeField, TextArea(2, 5)] private List<string> dialogueStage4 = new List<string>();
 
     [SerializeField] private string ignoredText = "";
+
+    [SerializeField] private List<string> currentDialogue;
 
     [Header("Settings")]
     [SerializeField, Range(0.01f, 0.1f)] 
@@ -18,17 +23,30 @@ public class DialogueInteractable : MonoBehaviour, IInteractable
     [SerializeField, Range(1f, 60f)]
     float interactTimeout = 5f;
 
-    int currentIndex = 0;
+    [SerializeField] int currentIndex = 0;
+
+    [SerializeField] bool isImportant = false;
+    //Finishing this characters dialogue + the collect amount has been met will progress game stage
 
     [Header("References")]
     [SerializeField] Transform mainCam;
     TextMeshPro dialogueBox;
+    GameStage gameStage;
+    PlayerStatus playerStatus;
 
     Coroutine timeoutCoroutine;
 
+    bool isTyping = false;
+
+    [SerializeField] bool isTalking = false;
+
     private void Awake()
     {
+        gameStage = GameObject.Find("GameManager").GetComponent<GameStage>();
+        playerStatus = GameObject.Find("GameManager").GetComponent<PlayerStatus>();
         dialogueBox = GetComponentInChildren<TMPro.TextMeshPro>();
+
+        currentDialogue = GetCurrentDialogue();
     }
 
     private void LateUpdate()
@@ -39,23 +57,35 @@ public class DialogueInteractable : MonoBehaviour, IInteractable
 
     public void Interact()
     {
-
         Debug.Log("Interacted with " + gameObject.name);
 
-        RestartTimeout();
-
-        if (currentIndex >= dialogueLines.Count)
+        if (isTalking)
         {
-            EndDialogue();
-            return;
+            Debug.Log("Setting Dialogue");
+            currentDialogue = GetCurrentDialogue();
+            isTalking = false;
         }
 
-        StartCoroutine(TypeLine(dialogueLines[currentIndex]));
-        currentIndex++;
+        if (!isTyping)
+        {
+            RestartTimeout();
+
+            if (currentIndex >= currentDialogue.Count)
+            {
+                EndDialogue();
+                return;
+            }
+
+            isTalking = true;
+            StartCoroutine(TypeLine(currentDialogue[currentIndex]));
+            currentIndex++;
+        }
     }
 
     IEnumerator TypeLine(string line)
     {
+        isTyping = true;    
+
         dialogueBox.text = "";
 
         foreach (char c in line)
@@ -63,6 +93,8 @@ public class DialogueInteractable : MonoBehaviour, IInteractable
             dialogueBox.text += c;
             yield return new WaitForSeconds(typeSpeed);
         }
+
+        isTyping = false;
     }
 
     void RestartTimeout()
@@ -86,14 +118,33 @@ public class DialogueInteractable : MonoBehaviour, IInteractable
 
     void EndDialogue()
     {
+        dialogueBox.text = "";
+        currentIndex = 0;
+        isTalking = false;
+
         if (timeoutCoroutine != null)
         {
             StopCoroutine(timeoutCoroutine);
             timeoutCoroutine = null;
+            currentIndex = 0;
         }
 
-        dialogueBox.text = "";
-        currentIndex = 0;
+        if (isImportant && playerStatus.amountCollected >= gameStage.currentAmountNeeded)
+        {
+            gameStage.ProgressGameStage();
+        }
+    }
+
+    private List<string> GetCurrentDialogue()
+    {
+        switch (gameStage.currentGameStage)
+        {
+            case 1: return dialogueStage1;
+            case 2: return dialogueStage2;
+            case 3: return dialogueStage3;
+            case 4: return dialogueStage4;
+            default: return dialogueStage0;
+        }
     }
 }
 

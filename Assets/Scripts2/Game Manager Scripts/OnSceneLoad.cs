@@ -3,6 +3,7 @@ using UnityEngine;
 public class OnSceneLoad : MonoBehaviour
 {
     private PlayerStatus playerStatus;
+    private GameStage gameStage;
 
     [SerializeField] bool deleteCollectables = true;
 
@@ -12,11 +13,7 @@ public class OnSceneLoad : MonoBehaviour
     private void Awake()
     {
         playerStatus = GameObject.Find("GameManager").GetComponent<PlayerStatus>();
-        if (!playerStatus.gameStarted)
-        {
-            Player.transform.position = StartLocation.position;
-            Player.transform.rotation = StartLocation.rotation;
-        }
+        gameStage = GameObject.Find("GameManager").GetComponent<GameStage>();
     }
 
     private void Start()
@@ -24,6 +21,13 @@ public class OnSceneLoad : MonoBehaviour
         if (deleteCollectables)
         {
             playerStatus.DestroyCollectiblesOnLoad();
+        }
+
+        if (gameStage.currentGameStage == 0)
+        {
+            Debug.Log("teleport player");
+            Player.transform.position = StartLocation.position;
+            Player.transform.rotation = StartLocation.rotation;
         }
     }
 }
